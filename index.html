@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#f7f4ee">
+<title>چالش ۴۰ روزه</title>
+<style>
+:root{--bg:#f7f4ee;--card:#fffdf9;--ink:#24313a;--muted:#7b817f;--line:#e5dfd5;--green:#55765e;--green-soft:#e9f0e9;--red:#a65d5d;--shadow:0 10px 30px rgba(48,43,35,.07)}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,Arial,sans-serif}
+.wrap{width:min(100%,560px);margin:auto;padding:28px 18px 40px}header{text-align:center;margin-bottom:22px}
+h1{margin:0;font-size:clamp(22px,7vw,32px);font-weight:700}.subtitle{margin:9px 0;color:var(--muted);font-size:13px}
+.counter{margin:20px 0 18px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:17px 18px;box-shadow:var(--shadow);display:flex;justify-content:space-between;align-items:center;gap:12px}
+.number{font-size:26px;font-weight:800}.label{font-size:12px;color:var(--muted);margin-top:2px}.progress{height:7px;background:#ece7df;border-radius:99px;overflow:hidden;margin-top:14px}.bar{height:100%;width:0;background:var(--green);border-radius:99px;transition:width .25s}
+.stats{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+.days{display:flex;flex-direction:column;gap:10px}.day{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:12px;box-shadow:0 4px 14px rgba(48,43,35,.035)}
+.day.complete{background:var(--green-soft);border-color:#c9dbc9}.day.failed{border-color:#e6cccc}
+.day-head{display:flex;align-items:center;gap:10px;margin-bottom:11px}.day-title{font-weight:700;font-size:14px}.status{margin-right:auto;font-size:11px;color:var(--muted)}.complete .status{color:var(--green);font-weight:600}
+.fail-btn{border:1px solid #dfc6c6;background:transparent;color:var(--red);border-radius:9px;padding:5px 9px;font-size:11px;cursor:pointer}
+.options{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.option{min-height:43px;border:1px solid var(--line);background:#fff;border-radius:10px;padding:7px 9px;display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
+.option.checked{background:#eef4ee;border-color:#c7d8c8}.checkbox{width:22px;height:22px;flex:0 0 22px;border:1.5px solid #c9c3b9;border-radius:7px;display:grid;place-items:center;font-size:14px;font-weight:800}.option.checked .checkbox{background:var(--green);border-color:var(--green);color:#fff}.option-name{font-size:12px;font-weight:600}
+footer{text-align:center;color:var(--muted);font-size:11px;margin-top:20px;line-height:1.8}.reset{margin-top:12px;background:transparent;border:0;color:#8b8278;font-size:11px;text-decoration:underline;cursor:pointer;padding:6px 10px}
+@media(max-width:360px){.options{grid-template-columns:1fr}}
+</style>
+
+<link rel="manifest" href="./manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="چالش ۴۰ روزه">
+<meta name="theme-color" content="#f7f4ee">
+
+</head>
+<body>
+<div class="wrap">
+<header><h1>نماز، قرآن، امام زمان (عج)، مراقبت</h1><div class="subtitle">چالش ۴۰ روزه</div></header>
+<section class="counter" aria-live="polite">
+<div><div class="number" id="doneCount">۰ روز</div><div class="label">روزهای کامل‌شده</div></div>
+<div style="flex:1;max-width:230px"><div class="stats"><span id="remainingText">۴۰ روز مانده</span><span id="percentText">۰٪</span></div><div class="progress"><div class="bar" id="bar"></div></div></div>
+</section>
+<main class="days" id="days"></main>
+<footer>هر روز چهار مورد دارد. وقتی هر چهار مورد ✓ شوند، آن روز کامل می‌شود.<br>× یعنی آن روز از دست رفته و تیک‌های روزهای قبل پاک می‌شوند.<br><button class="reset" id="resetBtn">شروع دوباره چالش</button></footer>
+</div>
+<script>
+(() => {
+const KEY="fortyDayChallenge_v3", total=40;
+const fa=n=>String(n).replace(/\d/g,d=>"۰۱۲۳۴۵۶۷۸۹"[d]);
+const names=["اول","دوم","سوم","چهارم","پنجم","ششم","هفتم","هشتم","نهم","دهم","یازدهم","دوازدهم","سیزدهم","چهاردهم","پانزدهم","شانزدهم","هفدهم","هجدهم","نوزدهم","بیستم","بیست‌ویکم","بیست‌ودوم","بیست‌وسوم","بیست‌وچهارم","بیست‌وپنجم","بیست‌وششم","بیست‌وهفتم","بیست‌وهشتم","بیست‌ونهم","سی‌ام","سی‌ویکم","سی‌ودوم","سی‌وسوم","سی‌وچهارم","سی‌وپنجم","سی‌وششم","سی‌وهفتم","سی‌وهشتم","سی‌ونهم","چهلم"];
+const items=["نماز","قرآن","امام زمان","فعال"];
+
+function blank(){return {checks:[false,false,false,false],failed:false}}
+function load(){
+  try{
+    const x=JSON.parse(localStorage.getItem(KEY)||"null");
+    if(Array.isArray(x)&&x.length===total&&x.every(d=>d&&Array.isArray(d.checks)&&d.checks.length===4))
+      return x;
+  }catch(e){}
+  return Array.from({length:total},blank);
+}
+let state=load();
+
+function save(){localStorage.setItem(KEY,JSON.stringify(state))}
+function isComplete(d){return !d.failed && d.checks.every(v=>v===true)}
+
+const days=document.getElementById("days");
+const doneCount=document.getElementById("doneCount");
+const remainingText=document.getElementById("remainingText");
+const percentText=document.getElementById("percentText");
+const bar=document.getElementById("bar");
+
+function updateCounter(){
+  const done=state.filter(isComplete).length;
+  const pct=Math.round(done/total*100);
+  doneCount.textContent=fa(done)+" روز";
+  remainingText.textContent=fa(total-done)+" روز مانده";
+  percentText.textContent=fa(pct)+"٪";
+  bar.style.width=pct+"%";
+}
+
+function render(){
+  days.innerHTML="";
+  state.forEach((d,i)=>{
+    const el=document.createElement("section");
+    el.className="day"+(isComplete(d)?" complete":"")+(d.failed?" failed":"");
+    el.dataset.day=String(i);
+    el.innerHTML=
+      '<div class="day-head">'+
+      '<div class="day-title">روز '+names[i]+'</div>'+
+      '<div class="status">'+(isComplete(d)?"✓ کامل شد":d.failed?"× از دست رفت":"در حال انجام")+'</div>'+
+      '<button class="fail-btn" type="button" data-action="fail">× ثبت نشدن</button>'+
+      '</div>'+
+      '<div class="options">'+
+      items.map((x,j)=>
+        '<div class="option '+(d.checks[j]&&!d.failed?"checked":"")+'" data-option="'+j+'">'+
+        '<div class="checkbox">'+(d.checks[j]&&!d.failed?"✓":"")+'</div>'+
+        '<div class="option-name">'+x+'</div>'+
+        '</div>'
+      ).join("")+
+      '</div>';
+    days.appendChild(el);
+  });
+  updateCounter();
+}
+
+// One single event handler for all 40 days.
+// This avoids the previous per-render closure/click issue.
+days.addEventListener("click", function(e){
+  const fail=e.target.closest('[data-action="fail"]');
+  const option=e.target.closest(".option");
+  const dayEl=e.target.closest(".day");
+  if(!dayEl)return;
+
+  const i=Number(dayEl.dataset.day);
+  if(!Number.isInteger(i)||i<0||i>=total)return;
+
+  if(fail){
+    e.stopPropagation();
+    if(!confirm("این روز ثبت نشود؟ تیک‌های روزهای قبل پاک می‌شوند."))return;
+    for(let k=0;k<i;k++){
+      state[k]=blank();
+    }
+    state[i]=blank();
+    state[i].failed=true;
+    save();
+    render();
+    window.scrollTo({top:0,behavior:"smooth"});
+    return;
+  }
+
+  if(option){
+    e.stopPropagation();
+    if(state[i].failed)return;
+    const j=Number(option.dataset.option);
+    if(j<0||j>3)return;
+    state[i].checks[j]=!state[i].checks[j];
+    save();
+    render();
+  }
+});
+
+document.getElementById("resetBtn").addEventListener("click",()=>{
+  if(confirm("همه اطلاعات پاک شوند و چالش از روز اول شروع شود؟")){
+    state=Array.from({length:total},blank);
+    save();
+    render();
+    window.scrollTo({top:0,behavior:"smooth"});
+  }
+});
+
+render();
+})();
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
+}
+</script>
+
+</body></html>
